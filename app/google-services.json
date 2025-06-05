@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "769858233897",
+    "project_id": "gestaofinanceira-45a04",
+    "storage_bucket": "gestaofinanceira-45a04.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:769858233897:android:e54b657ae71f0ded6ede38",
+        "android_client_info": {
+          "package_name": "com.example.trabalhogestao"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "769858233897-anaakhl32a4at765v8207itd7rhlbitn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.trabalhogestao",
+            "certificate_hash": "16536c693a607f3d0369c8f6c1d1921bd6ed73bd"
+          }
+        },
+        {
+          "client_id": "769858233897-to1b9l01048ttjbaua7gldhv12gt27l4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCHpT92G0O0BTWsn_NdZUiW8qnw5BKgyQ4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "769858233897-to1b9l01048ttjbaua7gldhv12gt27l4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
