@@ -3,6 +3,7 @@ package com.example.trabalhogestao;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -25,73 +26,52 @@ public class MainActivity extends AppCompatActivity {
     SignInButton btSignIn;
     GoogleSignInClient googleSignInClient;
     FirebaseAuth firebaseAuth;
+    private TextView tituloMainActivity;
+    private TextView introducaoMainActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         btSignIn = findViewById(R.id.signInButton);
-
-        //TODO: O TOKEN DEVE SER TROCADO! DEVE SER O TOKEN DO SEU PROJETO NO FIREBASE
         GoogleSignInOptions googleSignInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken("769858233897-to1b9l01048ttjbaua7gldhv12gt27l4.apps.googleusercontent.com") //TODO TOKEN A SER TROCADO
+                .requestIdToken("769858233897-to1b9l01048ttjbaua7gldhv12gt27l4.apps.googleusercontent.com")
                 .requestEmail()
                 .build();
-
-        // Inicializando serviço de login no Google Client
         googleSignInClient = GoogleSignIn.getClient(MainActivity.this, googleSignInOptions);
-
         btSignIn.setOnClickListener((View.OnClickListener) view -> {
-            //Cria um novo intent
             Intent intent = googleSignInClient.getSignInIntent();
-
             startActivityForResult(intent, 100);
         });
-
-        // Inicializa autenticação firebase
         firebaseAuth = FirebaseAuth.getInstance();
-        // Inicializa usuário firebase
         FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
-        // Verifica se o usuário foi autenticado
         if (firebaseUser != null) {
-            // Se o usuário está autenticado, chama a segunda tela
             startActivity(new Intent(MainActivity.this, Profile.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
         }
-    }
+        tituloMainActivity = findViewById(R.id.textViewTituloMain);
+        introducaoMainActivity = findViewById(R.id.textViewIntroducaoMainActivity);
 
+        introducaoMainActivity.setText("Esse é o seu app de gestão financeira! Entre com sua conta Google");
+        tituloMainActivity.setText("GastaBem");
+    }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
         if (requestCode == 100) {
-
             Task<GoogleSignInAccount> signInAccountTask = GoogleSignIn.getSignedInAccountFromIntent(data);
-
             if (signInAccountTask.isSuccessful()) {
-
                 Toast.makeText(this, "Login com Google bem-sucedido", Toast.LENGTH_SHORT).show();
-
-
                 try {
-
                     GoogleSignInAccount googleSignInAccount = signInAccountTask.getResult(ApiException.class);
-
                     if (googleSignInAccount != null) {
-
                         AuthCredential authCredential = GoogleAuthProvider.getCredential(googleSignInAccount.getIdToken(), null);
-
                         firebaseAuth.signInWithCredential(authCredential).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                             @Override
                             public void onComplete(@NonNull Task<AuthResult> task) {
-
                                 if (task.isSuccessful()) {
-
                                     startActivity(new Intent(MainActivity.this, Profile.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
-
                                 } else {
                                     Toast.makeText(MainActivity.this, "Erro de autenticação: ", Toast.LENGTH_SHORT).show();
-
                                 }
                             }
                         });
@@ -102,5 +82,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 
 }
