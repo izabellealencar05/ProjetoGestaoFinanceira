@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
         firebaseAuth = FirebaseAuth.getInstance();
         FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
         if (firebaseUser != null) {
-            startActivity(new Intent(MainActivity.this, Profile.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            startActivity(new Intent(MainActivity.this, Home.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
         }
         tituloMainActivity = findViewById(R.id.textViewTituloMain);
         introducaoMainActivity = findViewById(R.id.textViewIntroducaoMainActivity);
@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 if (task.isSuccessful()) {
-                                    startActivity(new Intent(MainActivity.this, Profile.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                                    startActivity(new Intent(MainActivity.this, Home.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
                                 } else {
                                     Toast.makeText(MainActivity.this, "Erro de autenticação: ", Toast.LENGTH_SHORT).show();
                                 }
