@@ -15,6 +15,9 @@
         android:theme="@style/Theme.TrabalhoGestao"
         tools:targetApi="31">
         <activity
+            android:name=".Relatorio"
+            android:exported="false" />
+        <activity
             android:name=".CadastroDespesa"
             android:exported="false" />
         <activity

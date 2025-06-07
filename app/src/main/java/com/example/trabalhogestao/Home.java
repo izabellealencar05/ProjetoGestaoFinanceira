@@ -32,6 +32,10 @@ public class Home extends AppCompatActivity {
     private DespesaDao despesaDao;
     private DespesaAdapter adapter;
     private CredentialManager credentialManager;
+    private static final int REQUEST_CODE_CADASTRAR_DESPESA = 1;
+    private Button btnGerarRelatorio;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +55,7 @@ public class Home extends AppCompatActivity {
 
         if (user != null) {
             Glide.with(this).load(user.getPhotoUrl()).into(foto);
-            tvBemVindo.setText("Bem-vindo, " + user.getDisplayName());
+            tvBemVindo.setText("Bem-vindo (a), " + user.getDisplayName());
         }
 
         // DB
@@ -61,10 +65,11 @@ public class Home extends AppCompatActivity {
         // RecyclerView
         carregarDespesas();
 
-        // Botão para cadastrar
         btnCadastrarDespesa.setOnClickListener(view -> {
-            startActivity(new Intent(Home.this, CadastroDespesa.class));
+            Intent intent = new Intent(Home.this, CadastroDespesa.class);
+            startActivityForResult(intent, REQUEST_CODE_CADASTRAR_DESPESA);
         });
+
 
         // Logout
         credentialManager = CredentialManager.create(this);
@@ -74,6 +79,13 @@ public class Home extends AppCompatActivity {
             startActivity(new Intent(Home.this, MainActivity.class));
             finish();
         });
+        btnGerarRelatorio = findViewById(R.id.btnGerarRelatorio);
+
+        btnGerarRelatorio.setOnClickListener(v -> {
+            Intent intent = new Intent(Home.this, Relatorio.class);
+            startActivity(intent);
+        });
+
     }
 
     private void carregarDespesas() {
@@ -90,5 +102,15 @@ public class Home extends AppCompatActivity {
             });
         });
     }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_CODE_CADASTRAR_DESPESA && resultCode == RESULT_OK) {
+            carregarDespesas(); // Atualiza a lista com a nova despesa
+        }
+    }
+
 
 }
+
