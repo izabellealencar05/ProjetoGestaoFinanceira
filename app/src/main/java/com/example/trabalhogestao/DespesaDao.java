@@ -12,6 +12,8 @@ public interface DespesaDao {
 
     @Insert
     void inserir (Despesa despesa);
+    @Query("SELECT * FROM despesas WHERE data BETWEEN :dataInicio AND :dataFim ORDER BY data DESC")
+    List<Despesa> listarPorPeriodo(String dataInicio, String dataFim);
 
     @Query("SELECT * FROM despesas ORDER BY data DESC")
     List<Despesa> listarTodas();

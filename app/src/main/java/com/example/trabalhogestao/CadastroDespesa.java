@@ -11,6 +11,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 
 public class CadastroDespesa extends AppCompatActivity {
 
@@ -34,10 +39,10 @@ public class CadastroDespesa extends AppCompatActivity {
         btnSalvar.setOnClickListener(v -> {
             String descricao = etDescricao.getText().toString().trim();
             String valorStr = etValor.getText().toString().trim();
-            String data = etData.getText().toString().trim();
+            String dataInput = etData.getText().toString().trim();  // data no formato dd/MM/yyyy
             String categoria = etCategoria.getText().toString().trim();
 
-            if (descricao.isEmpty() || valorStr.isEmpty() || data.isEmpty() || categoria.isEmpty()) {
+            if (descricao.isEmpty() || valorStr.isEmpty() || dataInput.isEmpty() || categoria.isEmpty()) {
                 Toast.makeText(this, "Preencha todos os campos", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -54,7 +59,19 @@ public class CadastroDespesa extends AppCompatActivity {
                 return;
             }
 
-            Despesa despesa = new Despesa(descricao, valor, data, categoria);
+            // Converter data de dd/MM/yyyy para yyyy-MM-dd
+            SimpleDateFormat inputFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+            SimpleDateFormat dbFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            String dataFormatada;
+            try {
+                Date date = inputFormat.parse(dataInput);
+                dataFormatada = dbFormat.format(date);
+            } catch (ParseException e) {
+                Toast.makeText(this, "Data inválida. Use o formato dd/MM/yyyy", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Despesa despesa = new Despesa(descricao, valor, dataFormatada, categoria);
 
             new Thread(() -> {
                 AppDatabase db = AppDatabase.getInstancia(getApplicationContext());
@@ -62,9 +79,10 @@ public class CadastroDespesa extends AppCompatActivity {
 
                 runOnUiThread(() -> {
                     Toast.makeText(this, "Despesa salva com sucesso!", Toast.LENGTH_SHORT).show();
-                    setResult(RESULT_OK);  // <- Aqui dentro
-                    finish();              // <- Aqui dentro
+                    setResult(RESULT_OK);
+                    finish();
                 });
             }).start();
         });
-    }}
+    }
+}
