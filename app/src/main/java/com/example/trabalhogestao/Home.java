@@ -9,6 +9,7 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,7 +22,8 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-public class Home extends AppCompatActivity {
+public class Home extends AppCompatActivity implements DespesaAdapter.OnItemClickListener {
+    // --- VARIÁVEIS DE UI E DADOS ---
     private ImageView foto;
     private TextView tvBemVindo;
     private Button logout, btnCadastrarDespesa, btnGerarRelatorio;
@@ -31,6 +33,18 @@ public class Home extends AppCompatActivity {
     private AppDatabase db;
     private DespesaDao despesaDao;
     private DespesaAdapter adapter;
+
+    // --- LÓGICA CORRIGIDA: ActivityResultLauncher declarado aqui no topo ---
+    // Usando o método mais moderno para aguardar o resultado de uma Activity
+    private final ActivityResultLauncher<Intent> cadastroDespesaLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                // Se a despesa foi salva ou editada com sucesso, atualiza a lista
+                if (result.getResultCode() == RESULT_OK) {
+                    carregarDespesas();
+                }
+            }
+    );
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,20 +63,14 @@ public class Home extends AppCompatActivity {
         firebaseAuth = FirebaseAuth.getInstance();
         FirebaseUser user = firebaseAuth.getCurrentUser();
 
-        // --- LÓGICA DE BOAS-VINDAS MELHORADA ---
         if (user != null) {
-            // Carrega a foto do perfil
             Glide.with(this).load(user.getPhotoUrl()).into(foto);
-
-            // Verifica se o nome de exibição não é nulo ou vazio
             if (user.getDisplayName() != null && !user.getDisplayName().isEmpty()) {
                 tvBemVindo.setText("Bem-vindo(a), " + user.getDisplayName());
             } else {
-                // Mensagem padrão caso o nome não seja encontrado
                 tvBemVindo.setText("Bem-vindo(a)!");
             }
         }
-        // --- FIM DA LÓGICA DE BOAS-VINDAS ---
 
         // DB
         db = AppDatabase.getInstancia(this);
@@ -95,19 +103,35 @@ public class Home extends AppCompatActivity {
         executor.execute(() -> {
             List<DespesaComCategoria> listaDespesas = despesaDao.listarTodasComCategoria();
             runOnUiThread(() -> {
-                adapter = new DespesaAdapter(listaDespesas);
+                adapter = new DespesaAdapter(listaDespesas, this);
                 rvDespesas.setLayoutManager(new LinearLayoutManager(this));
                 rvDespesas.setAdapter(adapter);
             });
         });
     }
 
-    private final ActivityResultLauncher<Intent> cadastroDespesaLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == RESULT_OK) {
-                    carregarDespesas();
-                }
-            }
-    );
+    // --- MÉTODOS DA INTERFACE OnItemClickListener ---
+    @Override
+    public void onEditClick(Despesa despesa) {
+        Intent intent = new Intent(Home.this, CadastroDespesa.class);
+        intent.putExtra("DESPESA_ID", despesa.getId());
+        cadastroDespesaLauncher.launch(intent);
+    }
+
+    @Override
+    public void onDeleteClick(Despesa despesa) {
+        new AlertDialog.Builder(this)
+                .setTitle("Confirmar Exclusão")
+                .setMessage("Tem certeza que deseja excluir esta despesa?")
+                .setPositiveButton("Sim", (dialog, which) -> excluirDespesa(despesa))
+                .setNegativeButton("Não", null)
+                .show();
+    }
+
+    private void excluirDespesa(Despesa despesa) {
+        new Thread(() -> {
+            db.despesaDao().deletar(despesa);
+            runOnUiThread(this::carregarDespesas); // Recarrega a lista após excluir
+        }).start();
+    }
 }

@@ -10,7 +10,8 @@ import androidx.room.PrimaryKey;
         foreignKeys = @ForeignKey(entity = Categoria.class,
                 parentColumns = "id",
                 childColumns = "categoriaId",
-                onDelete = ForeignKey.CASCADE))public class Despesa {
+                onDelete = ForeignKey.CASCADE))
+public class Despesa {
 
     @PrimaryKey(autoGenerate = true)
     private int id;
@@ -23,9 +24,7 @@ import androidx.room.PrimaryKey;
     @NonNull
     private String data;
 
-    @NonNull
-    // Campo antigo 'categoria' foi substituído por 'categoriaId'
-    @ColumnInfo(index = true) // O index melhora a performance de buscas por este campo
+    @ColumnInfo(index = true)
     private int categoriaId;
 
     public Despesa(@NonNull String descricao, double valor, @NonNull String data, int categoriaId) {
@@ -35,14 +34,31 @@ import androidx.room.PrimaryKey;
         this.categoriaId = categoriaId;
     }
 
-
-
+    // --- GETTERS ---
     public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
     @NonNull
     public String getDescricao() { return descricao; }
     public double getValor() { return valor; }
     @NonNull
     public String getData() { return data; }
     public int getCategoriaId() { return categoriaId; }
+
+    // --- SETTERS (MÉTODOS CORRIGIDOS E ADICIONADOS) ---
+    public void setId(int id) { this.id = id; }
+
+    public void setDescricao(@NonNull String descricao) {
+        this.descricao = descricao;
+    }
+
+    public void setValor(double valor) {
+        this.valor = valor;
+    }
+
+    public void setData(@NonNull String data) {
+        this.data = data;
+    }
+
+    public void setCategoriaId(int categoriaId) {
+        this.categoriaId = categoriaId;
+    }
 }

@@ -5,6 +5,7 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Transaction;
+import androidx.room.Update;
 
 import java.util.List;
 
@@ -20,13 +21,10 @@ public interface DespesaDao {
     @Query("DELETE FROM despesas")
     void deletarTodas();
 
-    // --- MÉTODOS NOVOS E ATUALIZADOS ABAIXO ---
-
-    /**
-     * Este método busca todas as despesas e, para cada uma, busca o nome da categoria
-     * correspondente na tabela de categorias.
-     * @return Uma lista de objetos DespesaComCategoria.
-     */
+    @Update
+    void atualizar(Despesa despesa);
+    @Query("SELECT * FROM despesas WHERE id = :despesaId LIMIT 1")
+    Despesa getDespesaById(int despesaId);
     @Transaction
     @Query("SELECT d.*, c.nome AS nomeCategoria FROM despesas d JOIN categorias c ON d.categoriaId = c.id ORDER BY d.data DESC")
     List<DespesaComCategoria> listarTodasComCategoria();
