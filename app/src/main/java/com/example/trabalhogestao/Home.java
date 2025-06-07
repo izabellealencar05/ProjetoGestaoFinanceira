@@ -30,7 +30,7 @@ public class Home extends AppCompatActivity {
     private FirebaseAuth firebaseAuth;
     private AppDatabase db;
     private DespesaDao despesaDao;
-    private DespesaAdapter adapter; // Esta é a única declaração necessária
+    private DespesaAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,10 +49,20 @@ public class Home extends AppCompatActivity {
         firebaseAuth = FirebaseAuth.getInstance();
         FirebaseUser user = firebaseAuth.getCurrentUser();
 
+        // --- LÓGICA DE BOAS-VINDAS MELHORADA ---
         if (user != null) {
+            // Carrega a foto do perfil
             Glide.with(this).load(user.getPhotoUrl()).into(foto);
-            tvBemVindo.setText("Bem-vindo (a), " + user.getDisplayName());
+
+            // Verifica se o nome de exibição não é nulo ou vazio
+            if (user.getDisplayName() != null && !user.getDisplayName().isEmpty()) {
+                tvBemVindo.setText("Bem-vindo(a), " + user.getDisplayName());
+            } else {
+                // Mensagem padrão caso o nome não seja encontrado
+                tvBemVindo.setText("Bem-vindo(a)!");
+            }
         }
+        // --- FIM DA LÓGICA DE BOAS-VINDAS ---
 
         // DB
         db = AppDatabase.getInstancia(this);
@@ -83,9 +93,7 @@ public class Home extends AppCompatActivity {
     private void carregarDespesas() {
         Executor executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
-            // A lógica aqui está perfeita, usando o novo método do DAO
             List<DespesaComCategoria> listaDespesas = despesaDao.listarTodasComCategoria();
-
             runOnUiThread(() -> {
                 adapter = new DespesaAdapter(listaDespesas);
                 rvDespesas.setLayoutManager(new LinearLayoutManager(this));
@@ -94,12 +102,10 @@ public class Home extends AppCompatActivity {
         });
     }
 
-    // Usando o método mais moderno para aguardar o resultado de uma Activity
     private final ActivityResultLauncher<Intent> cadastroDespesaLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == RESULT_OK) {
-                    // Se a despesa foi salva com sucesso, atualiza a lista
                     carregarDespesas();
                 }
             }

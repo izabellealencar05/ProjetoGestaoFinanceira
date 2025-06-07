@@ -3,9 +3,11 @@ package com.example.trabalhogestao;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.text.DecimalFormat;
@@ -22,11 +24,10 @@ public class Relatorio extends AppCompatActivity {
     private AppDatabase db;
     private DespesaDao despesaDao;
 
-    private TextView tvPeriodoRelatorio;
-    private TextView tvTotalGasto;
-    private TextView tvMediaDiaria;
-    private LinearLayout llCategorias;
-    private Button btnVoltarRelatorio;
+    // Componentes da UI
+    private Button btnRelatorioSemanal, btnRelatorioMensal, btnRelatorioAnual, btnVoltarRelatorio;
+    private TextView tvInstrucaoRelatorio, tvTituloRelatorio, tvPeriodoRelatorio, tvTotalGasto, tvMediaDiaria;
+    private LinearLayout llCategorias, layoutConteudoRelatorio;
 
     private static final String TAG = "RelatorioActivity";
 
@@ -35,71 +36,106 @@ public class Relatorio extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_relatorio);
 
+        db = AppDatabase.getInstancia(getApplicationContext());
+        despesaDao = db.despesaDao();
+
+        // Vinculando todos os componentes da UI
+        btnRelatorioSemanal = findViewById(R.id.btnRelatorioSemanal);
+        btnRelatorioMensal = findViewById(R.id.btnRelatorioMensal);
+        btnRelatorioAnual = findViewById(R.id.btnRelatorioAnual);
+        btnVoltarRelatorio = findViewById(R.id.btnVoltarRelatorio);
+
+        tvInstrucaoRelatorio = findViewById(R.id.tvInstrucaoRelatorio);
+        layoutConteudoRelatorio = findViewById(R.id.layoutConteudoRelatorio);
+        tvTituloRelatorio = findViewById(R.id.tvTituloRelatorio);
         tvPeriodoRelatorio = findViewById(R.id.tvPeriodoRelatorio);
         tvTotalGasto = findViewById(R.id.tvTotalGasto);
         tvMediaDiaria = findViewById(R.id.tvMediaDiaria);
         llCategorias = findViewById(R.id.llCategorias);
-        btnVoltarRelatorio = findViewById(R.id.btnVoltarRelatorio);
 
-        db = AppDatabase.getInstancia(getApplicationContext());
-        despesaDao = db.despesaDao();
-
-        gerarRelatorioSemanal();
+        // Configurando os cliques dos botões de período
+        btnRelatorioSemanal.setOnClickListener(v -> gerarRelatorio("semanal"));
+        btnRelatorioMensal.setOnClickListener(v -> gerarRelatorio("mensal"));
+        btnRelatorioAnual.setOnClickListener(v -> gerarRelatorio("anual"));
 
         btnVoltarRelatorio.setOnClickListener(v -> finish());
     }
 
-    private void gerarRelatorioSemanal() {
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.DAY_OF_WEEK, calendar.getFirstDayOfWeek());
-        Date dataInicioDate = calendar.getTime();
-        Date dataFimDate = new Date();
+    private void gerarRelatorio(String tipoPeriodo) {
+        Calendar inicio = Calendar.getInstance();
+        Calendar fim = Calendar.getInstance();
+
+        Date dataInicioDate;
+        Date dataFimDate;
+        int diasNoPeriodo;
+        String titulo;
+
+        switch (tipoPeriodo) {
+            case "mensal":
+                titulo = "Relatório Mensal";
+                inicio.set(Calendar.DAY_OF_MONTH, 1);
+                fim.set(Calendar.DAY_OF_MONTH, fim.getActualMaximum(Calendar.DAY_OF_MONTH));
+                diasNoPeriodo = fim.getActualMaximum(Calendar.DAY_OF_MONTH);
+                break;
+
+            case "anual":
+                titulo = "Relatório Anual";
+                inicio.set(Calendar.DAY_OF_YEAR, 1);
+                fim.set(Calendar.DAY_OF_YEAR, fim.getActualMaximum(Calendar.DAY_OF_YEAR));
+                diasNoPeriodo = fim.getActualMaximum(Calendar.DAY_OF_YEAR);
+                break;
+
+            case "semanal":
+            default:
+                titulo = "Relatório Semanal";
+                inicio.set(Calendar.DAY_OF_WEEK, inicio.getFirstDayOfWeek());
+                diasNoPeriodo = 7;
+                break;
+        }
+
+        dataInicioDate = inicio.getTime();
+        dataFimDate = fim.getTime();
 
         String dataInicioFormatada = formatarDataParaDB(dataInicioDate);
         String dataFimFormatada = formatarDataParaDB(dataFimDate);
 
+        // --- LINHA CORRIGIDA ABAIXO ---
+        // Usamos 'dataFimDate' (o objeto Date) em vez de 'dataFimFormatada' (a String)
         String periodoExibicao = formatarDataParaUI(dataInicioDate) + " - " + formatarDataParaUI(dataFimDate);
-        tvPeriodoRelatorio.setText("Período: " + periodoExibicao);
 
         new Thread(() -> {
-            List<DespesaComCategoria> despesasDaSemana = despesaDao.listarPorPeriodoComCategoria(dataInicioFormatada, dataFimFormatada);
+            List<DespesaComCategoria> despesasDoPeriodo = despesaDao.listarPorPeriodoComCategoria(dataInicioFormatada, dataFimFormatada);
+            Log.d(TAG, "Buscando período " + tipoPeriodo + ". Encontradas " + despesasDoPeriodo.size() + " despesas.");
 
-            Log.d(TAG, "Período de busca: " + dataInicioFormatada + " a " + dataFimFormatada);
-            Log.d(TAG, "Despesas encontradas na semana: " + despesasDaSemana.size());
-
-            // 1. Usamos variáveis locais para fazer o cálculo
             double totalCalculado = 0;
-            Map<String, Double> gastosPorCategoriaCalculado = new HashMap<>();
-
-            for (DespesaComCategoria d : despesasDaSemana) {
+            Map<String, Double> gastosPorCategoria = new HashMap<>();
+            for (DespesaComCategoria d : despesasDoPeriodo) {
                 totalCalculado += d.despesa.getValor();
-                String categoria = d.nomeCategoria; // Pega o nome da categoria do novo objeto
-                double valorAtual = gastosPorCategoriaCalculado.getOrDefault(categoria, 0.0);
-                gastosPorCategoriaCalculado.put(categoria, valorAtual + d.despesa.getValor());
+                String categoria = d.nomeCategoria;
+                gastosPorCategoria.put(categoria, gastosPorCategoria.getOrDefault(categoria, 0.0) + d.despesa.getValor());
             }
 
-            double mediaDiariaCalculada = despesasDaSemana.isEmpty() ? 0 : totalCalculado / 7.0;
+            double mediaDiariaCalculada = (diasNoPeriodo > 0) ? totalCalculado / diasNoPeriodo : 0;
 
-            // 2. <-- PONTO CRÍTICO DA CORREÇÃO
-            // Criamos variáveis FINAIS com os resultados para passar para a UI thread.
-            // É a única forma segura de passar os dados da thread de background para a UI.
             final double finalTotalGasto = totalCalculado;
             final double finalMediaDiaria = mediaDiariaCalculada;
-            final Map<String, Double> finalGastosPorCategoria = gastosPorCategoriaCalculado;
+            final Map<String, Double> finalGastosPorCategoria = gastosPorCategoria;
 
             runOnUiThread(() -> {
+                tvInstrucaoRelatorio.setVisibility(View.GONE);
+                layoutConteudoRelatorio.setVisibility(View.VISIBLE);
+
                 DecimalFormat df = new DecimalFormat("0.00");
 
-                // 3. Usamos as variáveis FINAIS aqui. O erro acontece se você usar "totalCalculado".
+                tvTituloRelatorio.setText(titulo);
+                tvPeriodoRelatorio.setText("Período: " + periodoExibicao);
                 tvTotalGasto.setText("R$ " + df.format(finalTotalGasto));
                 tvMediaDiaria.setText("R$ " + df.format(finalMediaDiaria));
 
                 llCategorias.removeAllViews();
-
                 if (finalGastosPorCategoria.isEmpty()) {
                     TextView tvSemGastos = new TextView(this);
-                    tvSemGastos.setText("Nenhum gasto registrado nesta semana.");
-                    tvSemGastos.setTextSize(16);
+                    tvSemGastos.setText("Nenhum gasto registrado neste período.");
                     llCategorias.addView(tvSemGastos);
                 } else {
                     for (Map.Entry<String, Double> entry : finalGastosPorCategoria.entrySet()) {
@@ -113,22 +149,12 @@ public class Relatorio extends AppCompatActivity {
     private void adicionarLinhaCategoria(String categoria, double valor, DecimalFormat df) {
         LinearLayout linhaLayout = new LinearLayout(this);
         linhaLayout.setOrientation(LinearLayout.HORIZONTAL);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        params.setMargins(0, 8, 0, 8);
-        linhaLayout.setLayoutParams(params);
+        linhaLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
 
         TextView tvNomeCategoria = new TextView(this);
         tvNomeCategoria.setText(categoria);
         tvNomeCategoria.setTextSize(16);
-        LinearLayout.LayoutParams paramsCategoria = new LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                1.0f
-        );
-        tvNomeCategoria.setLayoutParams(paramsCategoria);
+        tvNomeCategoria.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f));
 
         TextView tvValorCategoria = new TextView(this);
         tvValorCategoria.setText("R$ " + df.format(valor));

@@ -1,5 +1,6 @@
 package com.example.trabalhogestao;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,14 +9,20 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class DespesaAdapter extends RecyclerView.Adapter<DespesaAdapter.DespesaViewHolder> {
 
-    // A lista agora é do tipo DespesaComCategoria
     private List<DespesaComCategoria> listaDespesas;
 
-    // O construtor também muda
+    private final SimpleDateFormat formatoBanco = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+    private final SimpleDateFormat formatoExibicao = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+
+
     public DespesaAdapter(List<DespesaComCategoria> listaDespesas) {
         this.listaDespesas = listaDespesas;
     }
@@ -32,13 +39,19 @@ public class DespesaAdapter extends RecyclerView.Adapter<DespesaAdapter.DespesaV
     public void onBindViewHolder(@NonNull DespesaViewHolder holder, int position) {
         DespesaComCategoria despesaComCategoria = listaDespesas.get(position);
 
-        // Para pegar os dados da despesa, acessamos o objeto 'despesa' dentro de 'despesaComCategoria'
         holder.tvDescricao.setText(despesaComCategoria.despesa.getDescricao());
         holder.tvValor.setText("R$ " + despesaComCategoria.despesa.getValor());
-        holder.tvData.setText(despesaComCategoria.despesa.getData());
-
-        // Para pegar o nome da categoria, acessamos o campo 'nomeCategoria' diretamente
         holder.tvCategoria.setText(despesaComCategoria.nomeCategoria);
+
+        String dataDoBanco = despesaComCategoria.despesa.getData();
+        try {
+            Date data = formatoBanco.parse(dataDoBanco);
+            String dataParaExibir = formatoExibicao.format(data);
+            holder.tvData.setText(dataParaExibir);
+        } catch (ParseException e) {
+            Log.e("DespesaAdapter", "Erro ao formatar data: " + dataDoBanco, e);
+            holder.tvData.setText(dataDoBanco);
+        }
     }
 
     @Override
