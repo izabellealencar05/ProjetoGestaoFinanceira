@@ -62,7 +62,7 @@ public class Relatorio extends AppCompatActivity {
         tvPeriodoRelatorio.setText("Período: " + periodoExibicao);
 
         new Thread(() -> {
-            List<Despesa> despesasDaSemana = despesaDao.listarPorPeriodo(dataInicioFormatada, dataFimFormatada);
+            List<DespesaComCategoria> despesasDaSemana = despesaDao.listarPorPeriodoComCategoria(dataInicioFormatada, dataFimFormatada);
 
             Log.d(TAG, "Período de busca: " + dataInicioFormatada + " a " + dataFimFormatada);
             Log.d(TAG, "Despesas encontradas na semana: " + despesasDaSemana.size());
@@ -71,11 +71,11 @@ public class Relatorio extends AppCompatActivity {
             double totalCalculado = 0;
             Map<String, Double> gastosPorCategoriaCalculado = new HashMap<>();
 
-            for (Despesa despesa : despesasDaSemana) {
-                totalCalculado += despesa.getValor();
-                String categoria = despesa.getCategoria();
+            for (DespesaComCategoria d : despesasDaSemana) {
+                totalCalculado += d.despesa.getValor();
+                String categoria = d.nomeCategoria; // Pega o nome da categoria do novo objeto
                 double valorAtual = gastosPorCategoriaCalculado.getOrDefault(categoria, 0.0);
-                gastosPorCategoriaCalculado.put(categoria, valorAtual + despesa.getValor());
+                gastosPorCategoriaCalculado.put(categoria, valorAtual + d.despesa.getValor());
             }
 
             double mediaDiariaCalculada = despesasDaSemana.isEmpty() ? 0 : totalCalculado / 7.0;

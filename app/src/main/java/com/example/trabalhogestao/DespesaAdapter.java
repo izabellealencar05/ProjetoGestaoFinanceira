@@ -12,9 +12,11 @@ import java.util.List;
 
 public class DespesaAdapter extends RecyclerView.Adapter<DespesaAdapter.DespesaViewHolder> {
 
-    private List<Despesa> listaDespesas;
+    // A lista agora é do tipo DespesaComCategoria
+    private List<DespesaComCategoria> listaDespesas;
 
-    public DespesaAdapter(List<Despesa> listaDespesas) {
+    // O construtor também muda
+    public DespesaAdapter(List<DespesaComCategoria> listaDespesas) {
         this.listaDespesas = listaDespesas;
     }
 
@@ -28,20 +30,25 @@ public class DespesaAdapter extends RecyclerView.Adapter<DespesaAdapter.DespesaV
 
     @Override
     public void onBindViewHolder(@NonNull DespesaViewHolder holder, int position) {
-        Despesa despesa = listaDespesas.get(position);
-        holder.tvDescricao.setText(despesa.getDescricao());
-        holder.tvValor.setText("R$ " + despesa.getValor());
-        holder.tvData.setText(despesa.getData());
-        holder.tvCategoria.setText(despesa.getCategoria());
+        DespesaComCategoria despesaComCategoria = listaDespesas.get(position);
+
+        // Para pegar os dados da despesa, acessamos o objeto 'despesa' dentro de 'despesaComCategoria'
+        holder.tvDescricao.setText(despesaComCategoria.despesa.getDescricao());
+        holder.tvValor.setText("R$ " + despesaComCategoria.despesa.getValor());
+        holder.tvData.setText(despesaComCategoria.despesa.getData());
+
+        // Para pegar o nome da categoria, acessamos o campo 'nomeCategoria' diretamente
+        holder.tvCategoria.setText(despesaComCategoria.nomeCategoria);
     }
 
     @Override
     public int getItemCount() {
         return listaDespesas.size();
     }
-    public void setDespesas(List<Despesa> novasDespesas) {
+
+    public void setDespesas(List<DespesaComCategoria> novasDespesas) {
         this.listaDespesas = novasDespesas;
-        notifyDataSetChanged();  // Atualiza o RecyclerView
+        notifyDataSetChanged();
     }
 
     public static class DespesaViewHolder extends RecyclerView.ViewHolder {

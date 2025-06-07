@@ -2,40 +2,35 @@ package com.example.trabalhogestao;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.credentials.CredentialManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Executor;
 
 import com.bumptech.glide.Glide;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class Home extends AppCompatActivity {
     private ImageView foto;
     private TextView tvBemVindo;
-    private Button logout, btnCadastrarDespesa;
+    private Button logout, btnCadastrarDespesa, btnGerarRelatorio;
     private RecyclerView rvDespesas;
 
     private FirebaseAuth firebaseAuth;
     private AppDatabase db;
     private DespesaDao despesaDao;
-    private DespesaAdapter adapter;
-    private CredentialManager credentialManager;
-    private static final int REQUEST_CODE_CADASTRAR_DESPESA = 1;
-    private Button btnGerarRelatorio;
-
-
+    private DespesaAdapter adapter; // Esta é a única declaração necessária
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +43,7 @@ public class Home extends AppCompatActivity {
         logout = findViewById(R.id.buttonLogout);
         btnCadastrarDespesa = findViewById(R.id.btnCadastrarDespesa);
         rvDespesas = findViewById(R.id.rvDespesas);
+        btnGerarRelatorio = findViewById(R.id.btnGerarRelatorio);
 
         // Firebase
         firebaseAuth = FirebaseAuth.getInstance();
@@ -67,34 +63,29 @@ public class Home extends AppCompatActivity {
 
         btnCadastrarDespesa.setOnClickListener(view -> {
             Intent intent = new Intent(Home.this, CadastroDespesa.class);
-            startActivityForResult(intent, REQUEST_CODE_CADASTRAR_DESPESA);
+            cadastroDespesaLauncher.launch(intent);
         });
 
-
         // Logout
-        credentialManager = CredentialManager.create(this);
         logout.setOnClickListener(v -> {
             firebaseAuth.signOut();
             Toast.makeText(getApplicationContext(), "Logout realizado com sucesso!", Toast.LENGTH_SHORT).show();
             startActivity(new Intent(Home.this, MainActivity.class));
             finish();
         });
-        btnGerarRelatorio = findViewById(R.id.btnGerarRelatorio);
 
         btnGerarRelatorio.setOnClickListener(v -> {
             Intent intent = new Intent(Home.this, Relatorio.class);
             startActivity(intent);
         });
-
     }
 
     private void carregarDespesas() {
         Executor executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
-            // Busca as despesas do banco em uma thread de fundo
-            List<Despesa> listaDespesas = despesaDao.listarTodas();
+            // A lógica aqui está perfeita, usando o novo método do DAO
+            List<DespesaComCategoria> listaDespesas = despesaDao.listarTodasComCategoria();
 
-            // Atualiza a RecyclerView na thread principal (UI thread)
             runOnUiThread(() -> {
                 adapter = new DespesaAdapter(listaDespesas);
                 rvDespesas.setLayoutManager(new LinearLayoutManager(this));
@@ -102,15 +93,15 @@ public class Home extends AppCompatActivity {
             });
         });
     }
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == REQUEST_CODE_CADASTRAR_DESPESA && resultCode == RESULT_OK) {
-            carregarDespesas(); // Atualiza a lista com a nova despesa
-        }
-    }
-
-
+    // Usando o método mais moderno para aguardar o resultado de uma Activity
+    private final ActivityResultLauncher<Intent> cadastroDespesaLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK) {
+                    // Se a despesa foi salva com sucesso, atualiza a lista
+                    carregarDespesas();
+                }
+            }
+    );
 }
-
