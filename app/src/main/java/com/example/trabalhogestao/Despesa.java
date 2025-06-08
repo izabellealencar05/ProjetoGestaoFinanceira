@@ -34,7 +34,6 @@ public class Despesa {
         this.categoriaId = categoriaId;
     }
 
-    // --- GETTERS ---
     public int getId() { return id; }
     @NonNull
     public String getDescricao() { return descricao; }
@@ -43,7 +42,6 @@ public class Despesa {
     public String getData() { return data; }
     public int getCategoriaId() { return categoriaId; }
 
-    // --- SETTERS (MÉTODOS CORRIGIDOS E ADICIONADOS) ---
     public void setId(int id) { this.id = id; }
 
     public void setDescricao(@NonNull String descricao) {

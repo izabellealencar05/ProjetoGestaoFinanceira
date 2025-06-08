@@ -29,9 +29,6 @@ public interface DespesaDao {
     @Query("SELECT d.*, c.nome AS nomeCategoria FROM despesas d JOIN categorias c ON d.categoriaId = c.id ORDER BY d.data DESC")
     List<DespesaComCategoria> listarTodasComCategoria();
 
-    /**
-     * Versão do método de busca por período que também inclui o nome da categoria.
-     */
     @Transaction
     @Query("SELECT d.*, c.nome AS nomeCategoria FROM despesas d JOIN categorias c ON d.categoriaId = c.id WHERE d.data BETWEEN :dataInicio AND :dataFim ORDER BY d.data DESC")
     List<DespesaComCategoria> listarPorPeriodoComCategoria(String dataInicio, String dataFim);
