@@ -19,6 +19,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import java.text.DateFormatSymbols;
 import java.text.DecimalFormat;
@@ -41,6 +43,7 @@ public class Relatorio extends AppCompatActivity {
     private TextView tvPeriodoAtual, tvTotalGasto, tvMediaDiaria, tvLabelMediaDiaria;
     private LinearLayout llCategorias, layoutNavegacao, layoutDatasPersonalizadas;
     private Button btnDataInicio, btnDataFim;
+    private MaterialToolbar toolbarRelatorio; // Adicionada variável para a Toolbar
     private MaterialButtonToggleGroup toggleModoRelatorio;
     private ImageButton btnPeriodoAnterior, btnProximoPeriodo;
 
@@ -63,9 +66,11 @@ public class Relatorio extends AppCompatActivity {
         configurarListeners();
 
         toggleModoRelatorio.check(R.id.btnModoMensal);
+        atualizarRelatorio();
     }
 
     private void vincularViews() {
+        toolbarRelatorio = findViewById(R.id.toolbarRelatorio); // Vincula a nova toolbar
         pieChart = findViewById(R.id.pieChart);
         tvPeriodoAtual = findViewById(R.id.tvPeriodoAtual);
         tvTotalGasto = findViewById(R.id.tvTotalGasto);
@@ -79,10 +84,13 @@ public class Relatorio extends AppCompatActivity {
         btnPeriodoAnterior = findViewById(R.id.btnPeriodoAnterior);
         btnProximoPeriodo = findViewById(R.id.btnProximoPeriodo);
         tvLabelMediaDiaria = findViewById(R.id.tvLabelMediaDiaria);
-        findViewById(R.id.btnVoltarRelatorio).setOnClickListener(v -> finish());
+        // A linha do botão de voltar foi removida daqui
     }
 
     private void configurarListeners() {
+        // Configura o clique no ícone de navegação da toolbar para fechar a tela
+        toolbarRelatorio.setNavigationOnClickListener(v -> finish());
+
         btnPeriodoAnterior.setOnClickListener(v -> navegarPeriodo(-1));
         btnProximoPeriodo.setOnClickListener(v -> navegarPeriodo(1));
 
