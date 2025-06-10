@@ -26,7 +26,6 @@ public class MainActivity extends AppCompatActivity {
     SignInButton btSignIn;
     GoogleSignInClient googleSignInClient;
     FirebaseAuth firebaseAuth;
-    private TextView tituloMainActivity;
     private TextView introducaoMainActivity;
 
     @Override
@@ -48,11 +47,9 @@ public class MainActivity extends AppCompatActivity {
         if (firebaseUser != null) {
             startActivity(new Intent(MainActivity.this, Home.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
         }
-        tituloMainActivity = findViewById(R.id.textViewTituloMain);
         introducaoMainActivity = findViewById(R.id.textViewIntroducaoMainActivity);
 
         introducaoMainActivity.setText("Esse é o seu app de gestão financeira! Entre com sua conta Google");
-        tituloMainActivity.setText("GastaBem");
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
