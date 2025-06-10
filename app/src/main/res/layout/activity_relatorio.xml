@@ -40,6 +40,7 @@
 
     </com.google.android.material.button.MaterialButtonToggleGroup>
 
+    <!-- Cabeçalho de Navegação -->
     <LinearLayout
         android:id="@+id/layoutNavegacao"
         android:layout_width="0dp"
@@ -78,59 +79,46 @@
             android:contentDescription="Próximo Período"/>
     </LinearLayout>
 
-    <FrameLayout
-        android:id="@+id/layoutControlesEspecificos"
-        android:layout_width="0dp"
+    <!-- Controles para o Período Personalizado (oculto por padrão) -->
+    <LinearLayout
+        android:id="@+id/layoutDatasPersonalizadas"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
         android:layout_marginTop="8dp"
+        android:visibility="gone"
+        tools:visibility="visible"
         app:layout_constraintTop_toBottomOf="@id/layoutNavegacao"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
-
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chipGroupSemanas"
-            android:layout_width="wrap_content"
+        <Button
+            android:id="@+id/btnDataInicio"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone"
-            app:singleSelection="true">
-        </com.google.android.material.chip.ChipGroup>
-
-        <LinearLayout
-            android:id="@+id/layoutDatasPersonalizadas"
-            android:layout_width="match_parent"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="Início"/>
+        <Button
+            android:id="@+id/btnDataFim"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:visibility="gone">
-            <Button
-                android:id="@+id/btnDataInicio"
-                style="?attr/materialButtonOutlinedStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="8dp"
-                android:text="Início"/>
-            <Button
-                android:id="@+id/btnDataFim"
-                style="?attr/materialButtonOutlinedStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Fim"/>
-        </LinearLayout>
+            android:layout_weight="1"
+            android:text="Fim"/>
+    </LinearLayout>
 
-    </FrameLayout>
-
+    <!-- ScrollView agora está ligado diretamente ao layout de cima -->
     <ScrollView
+        android:id="@+id/scrollViewResultados"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@id/layoutControlesEspecificos"
+        app:layout_constraintTop_toBottomOf="@id/layoutNavegacao"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/btnVoltarRelatorio">
 
-        <!-- CONTEÚDO CORRIGIDO E COMPLETO ABAIXO -->
         <LinearLayout
             android:id="@+id/layoutConteudoRelatorio"
             android:layout_width="match_parent"

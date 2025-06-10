@@ -7,13 +7,17 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.NumberPicker;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.button.MaterialButtonToggleGroup;
-import com.google.android.material.chip.Chip;
-import com.google.android.material.chip.ChipGroup;
+import java.text.DateFormatSymbols;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -24,15 +28,12 @@ import java.util.concurrent.TimeUnit;
 
 public class Relatorio extends AppCompatActivity {
 
-    // --- Variáveis de Controle de Estado ---
     private Calendar calendarioBase;
     private String modoRelatorio = "mensal";
     private Calendar dataInicioPersonalizada, dataFimPersonalizada;
 
-    // --- Componentes da UI ---
     private TextView tvPeriodoAtual, tvTotalGasto, tvMediaDiaria;
     private LinearLayout llCategorias, layoutNavegacao, layoutDatasPersonalizadas;
-    private ChipGroup chipGroupSemanas;
     private Button btnDataInicio, btnDataFim;
     private MaterialButtonToggleGroup toggleModoRelatorio;
     private ImageButton btnPeriodoAnterior, btnProximoPeriodo;
@@ -53,8 +54,6 @@ public class Relatorio extends AppCompatActivity {
         configurarListeners();
 
         toggleModoRelatorio.check(R.id.btnModoMensal);
-        atualizarVisibilidadeControles();
-        atualizarRelatorio();
     }
 
     private void vincularViews() {
@@ -64,7 +63,6 @@ public class Relatorio extends AppCompatActivity {
         llCategorias = findViewById(R.id.llCategorias);
         layoutNavegacao = findViewById(R.id.layoutNavegacao);
         layoutDatasPersonalizadas = findViewById(R.id.layoutDatasPersonalizadas);
-        chipGroupSemanas = findViewById(R.id.chipGroupSemanas);
         btnDataInicio = findViewById(R.id.btnDataInicio);
         btnDataFim = findViewById(R.id.btnDataFim);
         toggleModoRelatorio = findViewById(R.id.toggleModoRelatorio);
@@ -94,14 +92,80 @@ public class Relatorio extends AppCompatActivity {
             atualizarRelatorio();
         });
 
+        tvPeriodoAtual.setOnClickListener(v -> abrirSeletorDePeriodo());
+
         btnDataInicio.setOnClickListener(v -> abrirDatePicker(true));
         btnDataFim.setOnClickListener(v -> abrirDatePicker(false));
     }
 
+    private void abrirSeletorDePeriodo() {
+        if ("mensal".equals(modoRelatorio)) {
+            abrirSeletorDeMesAno();
+        } else if ("anual".equals(modoRelatorio)) {
+            abrirSeletorDeAno();
+        }
+    }
+
+    private void abrirSeletorDeMesAno() {
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.HORIZONTAL);
+        container.setGravity(Gravity.CENTER);
+
+        NumberPicker monthPicker = new NumberPicker(this);
+        final String[] meses = new DateFormatSymbols(new Locale("pt", "BR")).getMonths();
+        String[] displayMeses = Arrays.copyOf(meses, 12); // Garante que temos apenas 12 meses
+        monthPicker.setMinValue(0);
+        monthPicker.setMaxValue(11);
+        monthPicker.setDisplayedValues(displayMeses);
+        monthPicker.setValue(calendarioBase.get(Calendar.MONTH));
+
+        NumberPicker yearPicker = new NumberPicker(this);
+        int anoAtual = Calendar.getInstance().get(Calendar.YEAR);
+        yearPicker.setMinValue(anoAtual - 20);
+        yearPicker.setMaxValue(anoAtual + 20);
+        yearPicker.setValue(calendarioBase.get(Calendar.YEAR));
+
+        container.addView(monthPicker);
+        container.addView(yearPicker);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Selecione o Mês e o Ano")
+                .setView(container)
+                .setPositiveButton("OK", (dialog, which) -> {
+                    calendarioBase.set(Calendar.MONTH, monthPicker.getValue());
+                    calendarioBase.set(Calendar.YEAR, yearPicker.getValue());
+                    atualizarRelatorio();
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void abrirSeletorDeAno() {
+        NumberPicker yearPicker = new NumberPicker(this);
+        int anoAtual = Calendar.getInstance().get(Calendar.YEAR);
+        yearPicker.setMinValue(anoAtual - 20);
+        yearPicker.setMaxValue(anoAtual + 20);
+        yearPicker.setValue(calendarioBase.get(Calendar.YEAR));
+
+        new AlertDialog.Builder(this)
+                .setTitle("Selecione o Ano")
+                .setView(yearPicker)
+                .setPositiveButton("OK", (dialog, which) -> {
+                    calendarioBase.set(Calendar.YEAR, yearPicker.getValue());
+                    atualizarRelatorio();
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+
     private void atualizarVisibilidadeControles() {
         layoutNavegacao.setVisibility("personalizado".equals(modoRelatorio) ? View.GONE : View.VISIBLE);
         layoutDatasPersonalizadas.setVisibility("personalizado".equals(modoRelatorio) ? View.VISIBLE : View.GONE);
-        chipGroupSemanas.setVisibility("mensal".equals(modoRelatorio) ? View.VISIBLE : View.GONE);
+
+        View anchorView = "personalizado".equals(modoRelatorio) ? layoutDatasPersonalizadas : layoutNavegacao;
+        ((androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) findViewById(R.id.scrollViewResultados).getLayoutParams())
+                .topToBottom = anchorView.getId();
     }
 
     private void navegarPeriodo(int direcao) {
@@ -151,42 +215,22 @@ public class Relatorio extends AppCompatActivity {
                 inicio.set(Calendar.DAY_OF_MONTH, 1);
                 fim.set(Calendar.DAY_OF_MONTH, fim.getActualMaximum(Calendar.DAY_OF_MONTH));
                 tvPeriodoAtual.setText(new SimpleDateFormat("MMMM 'de' yyyy", new Locale("pt","BR")).format(calendarioBase.getTime()));
-                gerarChipsDeSemana(calendarioBase);
-                gerarRelatorioParaPeriodo(inicio.getTime(), fim.getTime());
-            } else { // Anual
+            } else {
                 inicio.set(Calendar.DAY_OF_YEAR, 1);
                 fim.set(Calendar.DAY_OF_YEAR, fim.getActualMaximum(Calendar.DAY_OF_YEAR));
                 tvPeriodoAtual.setText(new SimpleDateFormat("yyyy", Locale.getDefault()).format(calendarioBase.getTime()));
-                gerarRelatorioParaPeriodo(inicio.getTime(), fim.getTime());
             }
-        }
-    }
-
-    private void gerarChipsDeSemana(Calendar mes) {
-        chipGroupSemanas.clearCheck();
-        chipGroupSemanas.removeAllViews();
-        int semanasNoMes = mes.getActualMaximum(Calendar.WEEK_OF_MONTH);
-
-        for (int i = 1; i <= semanasNoMes; i++) {
-            Chip chip = new Chip(this);
-            chip.setText("Semana " + i);
-            chip.setCheckable(true);
-            final int semanaAtual = i;
-            chip.setOnClickListener(v -> {
-                Calendar inicioSemana = (Calendar) mes.clone();
-                inicioSemana.set(Calendar.WEEK_OF_MONTH, semanaAtual);
-                inicioSemana.set(Calendar.DAY_OF_WEEK, inicioSemana.getFirstDayOfWeek());
-
-                Calendar fimSemana = (Calendar) inicioSemana.clone();
-                fimSemana.add(Calendar.DAY_OF_WEEK, 6);
-
-                gerarRelatorioParaPeriodo(inicioSemana.getTime(), fimSemana.getTime());
-            });
-            chipGroupSemanas.addView(chip);
+            gerarRelatorioParaPeriodo(inicio.getTime(), fim.getTime());
         }
     }
 
     private void gerarRelatorioParaPeriodo(Date dataInicio, Date dataFim) {
+        if (dataInicio.after(dataFim)) {
+            preencherDadosRelatorio(0,0,new HashMap<>());
+            Toast.makeText(this, "A data de início não pode ser posterior à data de fim.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         long diffEmMillis = Math.abs(dataFim.getTime() - dataInicio.getTime());
         long diffEmDias = TimeUnit.DAYS.convert(diffEmMillis, TimeUnit.MILLISECONDS) + 1;
 
