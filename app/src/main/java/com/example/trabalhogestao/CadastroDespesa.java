@@ -8,10 +8,10 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.appbar.MaterialToolbar;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -24,13 +24,13 @@ public class CadastroDespesa extends AppCompatActivity {
     private EditText etDescricao, etValor, etData;
     private Spinner spinnerCategoria;
     private ImageButton btnNovaCategoria;
-    private Button btnSalvar, btnVoltar;
+    private Button btnSalvar;
+    private MaterialToolbar toolbar;
 
+    private Despesa despesaParaEditar;
     private AppDatabase db;
     private List<Categoria> listaCategorias = new ArrayList<>();
     private ArrayAdapter<Categoria> categoriaAdapter;
-
-    private Despesa despesaParaEditar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,29 +39,57 @@ public class CadastroDespesa extends AppCompatActivity {
 
         db = AppDatabase.getInstancia(getApplicationContext());
 
+        vincularViews();
+        configurarListeners();
+
+        configurarSpinner();
+        carregarCategorias();
+    }
+
+    private void vincularViews() {
+        toolbar = findViewById(R.id.toolbarCadastro);
         etDescricao = findViewById(R.id.etDescricao);
         etValor = findViewById(R.id.etValor);
         etData = findViewById(R.id.etData);
         spinnerCategoria = findViewById(R.id.spinnerCategoria);
         btnNovaCategoria = findViewById(R.id.btnNovaCategoria);
         btnSalvar = findViewById(R.id.btnSalvar);
-        btnVoltar = findViewById(R.id.btnVoltar);
+    }
 
-        configurarSpinner();
-        carregarCategorias();
-
-        btnVoltar.setOnClickListener(v -> finish());
+    private void configurarListeners() {
+        toolbar.setNavigationOnClickListener(v -> finish());
         btnNovaCategoria.setOnClickListener(v -> abrirDialogNovaCategoria());
         btnSalvar.setOnClickListener(v -> salvarDespesa());
+    }
 
+    private void configurarSpinner() {
+        categoriaAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, listaCategorias);
+        categoriaAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerCategoria.setAdapter(categoriaAdapter);
+    }
+
+    private void carregarCategorias() {
+        new Thread(() -> {
+            List<Categoria> categoriasDoBanco = db.categoriaDao().listarTodas();
+            runOnUiThread(() -> {
+                listaCategorias.clear();
+                listaCategorias.addAll(categoriasDoBanco);
+                categoriaAdapter.notifyDataSetChanged();
+
+                verificarModoEdicao();
+            });
+        }).start();
+    }
+
+    private void verificarModoEdicao() {
         if (getIntent().hasExtra("DESPESA_ID")) {
-            setTitle("Editar Despesa");
+            toolbar.setTitle("Editar Despesa");
             int despesaId = getIntent().getIntExtra("DESPESA_ID", -1);
             if (despesaId != -1) {
                 carregarDespesaParaEdicao(despesaId);
             }
         } else {
-            setTitle("Cadastrar Despesa");
+            toolbar.setTitle("Nova Despesa");
         }
     }
 
@@ -96,26 +124,6 @@ public class CadastroDespesa extends AppCompatActivity {
         }
     }
 
-    private void configurarSpinner() {
-        categoriaAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, listaCategorias);
-        categoriaAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerCategoria.setAdapter(categoriaAdapter);
-    }
-
-    private void carregarCategorias() {
-        new Thread(() -> {
-            List<Categoria> categoriasDoBanco = db.categoriaDao().listarTodas();
-            runOnUiThread(() -> {
-                listaCategorias.clear();
-                listaCategorias.addAll(categoriasDoBanco);
-                categoriaAdapter.notifyDataSetChanged();
-                if (despesaParaEditar != null) {
-                    preencherCamposParaEdicao();
-                }
-            });
-        }).start();
-    }
-
     private void abrirDialogNovaCategoria() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Nova Categoria");
@@ -137,15 +145,13 @@ public class CadastroDespesa extends AppCompatActivity {
         new Thread(() -> {
             try {
                 db.categoriaDao().inserir(novaCategoria);
-
                 runOnUiThread(() -> {
                     Toast.makeText(this, "Categoria salva!", Toast.LENGTH_SHORT).show();
                     carregarCategorias();
                 });
-
             } catch (Exception e) {
                 runOnUiThread(() -> {
-                    Toast.makeText(this, "Categoria já existe!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Erro: Categoria já existe.", Toast.LENGTH_SHORT).show();
                 });
             }
         }).start();
