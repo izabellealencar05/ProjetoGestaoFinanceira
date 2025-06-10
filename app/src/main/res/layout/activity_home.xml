@@ -42,7 +42,7 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toEndOf="@id/imageViewFoto"
                     app:layout_constraintTop_toTopOf="parent"
-                    tools:text="Bem-vindo(a), Yago" />
+                    tools:text="Bem-vindo(a), " />
 
                 <ImageButton
                     android:id="@+id/buttonLogout"
@@ -51,7 +51,7 @@
                     android:layout_marginEnd="8dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="Logout"
-                    android:src="@android:drawable/ic_menu_revert"
+                    android:src="@drawable/ic_logout"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent"

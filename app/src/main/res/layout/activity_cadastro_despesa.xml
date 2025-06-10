@@ -11,7 +11,7 @@
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/surface_color"
+        android:background="@color/brand_blue"
         app:elevation="4dp">
 
         <com.google.android.material.appbar.MaterialToolbar
@@ -19,8 +19,9 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:navigationIcon="@drawable/ic_chevron_left"
+            app:navigationIconTint="@color/white"
             app:title="Nova Despesa"
-            app:titleTextColor="@color/text_primary"/>
+            app:titleTextColor="@color/white"/>
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -117,7 +118,6 @@
                 android:textSize="16sp"
                 app:backgroundTint="@color/brand_blue"
                 app:cornerRadius="8dp"/>
-
         </LinearLayout>
     </ScrollView>
 
