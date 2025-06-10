@@ -23,7 +23,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 public class Home extends AppCompatActivity implements DespesaAdapter.OnItemClickListener {
-    // --- VARIÁVEIS DE UI E DADOS ---
     private ImageView foto;
     private TextView tvBemVindo;
     private Button logout, btnCadastrarDespesa, btnGerarRelatorio;
@@ -34,12 +33,9 @@ public class Home extends AppCompatActivity implements DespesaAdapter.OnItemClic
     private DespesaDao despesaDao;
     private DespesaAdapter adapter;
 
-    // --- LÓGICA CORRIGIDA: ActivityResultLauncher declarado aqui no topo ---
-    // Usando o método mais moderno para aguardar o resultado de uma Activity
     private final ActivityResultLauncher<Intent> cadastroDespesaLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
-                // Se a despesa foi salva ou editada com sucesso, atualiza a lista
                 if (result.getResultCode() == RESULT_OK) {
                     carregarDespesas();
                 }
@@ -51,7 +47,7 @@ public class Home extends AppCompatActivity implements DespesaAdapter.OnItemClic
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        // Views
+
         foto = findViewById(R.id.imageViewFoto);
         tvBemVindo = findViewById(R.id.textViewNome);
         logout = findViewById(R.id.buttonLogout);
@@ -59,7 +55,6 @@ public class Home extends AppCompatActivity implements DespesaAdapter.OnItemClic
         rvDespesas = findViewById(R.id.rvDespesas);
         btnGerarRelatorio = findViewById(R.id.btnGerarRelatorio);
 
-        // Firebase
         firebaseAuth = FirebaseAuth.getInstance();
         FirebaseUser user = firebaseAuth.getCurrentUser();
 
@@ -72,11 +67,10 @@ public class Home extends AppCompatActivity implements DespesaAdapter.OnItemClic
             }
         }
 
-        // DB
+
         db = AppDatabase.getInstancia(this);
         despesaDao = db.despesaDao();
 
-        // RecyclerView
         carregarDespesas();
 
         btnCadastrarDespesa.setOnClickListener(view -> {
@@ -110,7 +104,6 @@ public class Home extends AppCompatActivity implements DespesaAdapter.OnItemClic
         });
     }
 
-    // --- MÉTODOS DA INTERFACE OnItemClickListener ---
     @Override
     public void onEditClick(Despesa despesa) {
         Intent intent = new Intent(Home.this, CadastroDespesa.class);
@@ -131,7 +124,7 @@ public class Home extends AppCompatActivity implements DespesaAdapter.OnItemClic
     private void excluirDespesa(Despesa despesa) {
         new Thread(() -> {
             db.despesaDao().deletar(despesa);
-            runOnUiThread(this::carregarDespesas); // Recarrega a lista após excluir
+            runOnUiThread(this::carregarDespesas);
         }).start();
     }
 }

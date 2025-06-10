@@ -1,7 +1,7 @@
 package com.example.trabalhogestao;
 
+import android.app.DatePickerDialog;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -10,6 +10,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.button.MaterialButtonToggleGroup;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -18,58 +20,57 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class Relatorio extends AppCompatActivity {
 
     // --- Variáveis de Controle de Estado ---
-    private Calendar calendario; // Controla a data do período atual
-    private String tipoRelatorio = "mensal"; // "semanal", "mensal", "anual"
+    private Calendar calendarioBase;
+    private String modoRelatorio = "mensal";
+    private Calendar dataInicioPersonalizada, dataFimPersonalizada;
 
     // --- Componentes da UI ---
-    private ImageButton btnPeriodoAnterior, btnProximoPeriodo;
     private TextView tvPeriodoAtual, tvTotalGasto, tvMediaDiaria;
-    private LinearLayout llCategorias;
+    private LinearLayout llCategorias, layoutNavegacao, layoutDatasPersonalizadas;
+    private ChipGroup chipGroupSemanas;
+    private Button btnDataInicio, btnDataFim;
     private MaterialButtonToggleGroup toggleModoRelatorio;
+    private ImageButton btnPeriodoAnterior, btnProximoPeriodo;
 
     private AppDatabase db;
-    private DespesaDao despesaDao;
-    private static final String TAG = "RelatorioActivity";
+    private final SimpleDateFormat formatoDB = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+    private final SimpleDateFormat formatoUI = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_relatorio);
 
-        // Inicializa o banco de dados
         db = AppDatabase.getInstancia(getApplicationContext());
-        despesaDao = db.despesaDao();
+        calendarioBase = Calendar.getInstance();
 
-        // Inicializa o calendário com a data atual
-        calendario = Calendar.getInstance();
-
-        // Vincula os componentes da UI
         vincularViews();
-
-        // Configura os listeners dos botões
         configurarListeners();
 
-        // Inicia com o modo mensal selecionado
         toggleModoRelatorio.check(R.id.btnModoMensal);
-
-        // Gera o primeiro relatório (mês atual)
+        atualizarVisibilidadeControles();
         atualizarRelatorio();
     }
 
     private void vincularViews() {
-        btnPeriodoAnterior = findViewById(R.id.btnPeriodoAnterior);
-        btnProximoPeriodo = findViewById(R.id.btnProximoPeriodo);
         tvPeriodoAtual = findViewById(R.id.tvPeriodoAtual);
-        toggleModoRelatorio = findViewById(R.id.toggleModoRelatorio);
         tvTotalGasto = findViewById(R.id.tvTotalGasto);
         tvMediaDiaria = findViewById(R.id.tvMediaDiaria);
         llCategorias = findViewById(R.id.llCategorias);
-        Button btnVoltarRelatorio = findViewById(R.id.btnVoltarRelatorio);
-        btnVoltarRelatorio.setOnClickListener(v -> finish());
+        layoutNavegacao = findViewById(R.id.layoutNavegacao);
+        layoutDatasPersonalizadas = findViewById(R.id.layoutDatasPersonalizadas);
+        chipGroupSemanas = findViewById(R.id.chipGroupSemanas);
+        btnDataInicio = findViewById(R.id.btnDataInicio);
+        btnDataFim = findViewById(R.id.btnDataFim);
+        toggleModoRelatorio = findViewById(R.id.toggleModoRelatorio);
+        btnPeriodoAnterior = findViewById(R.id.btnPeriodoAnterior);
+        btnProximoPeriodo = findViewById(R.id.btnProximoPeriodo);
+        findViewById(R.id.btnVoltarRelatorio).setOnClickListener(v -> finish());
     }
 
     private void configurarListeners() {
@@ -77,86 +78,132 @@ public class Relatorio extends AppCompatActivity {
         btnProximoPeriodo.setOnClickListener(v -> navegarPeriodo(1));
 
         toggleModoRelatorio.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
-            if (isChecked) {
-                if (checkedId == R.id.btnModoSemanal) {
-                    tipoRelatorio = "semanal";
-                } else if (checkedId == R.id.btnModoMensal) {
-                    tipoRelatorio = "mensal";
-                } else if (checkedId == R.id.btnModoAnual) {
-                    tipoRelatorio = "anual";
-                }
-                // Reseta o calendário para a data atual ao trocar de modo
-                calendario = Calendar.getInstance();
-                atualizarRelatorio();
-            }
+            if (!isChecked) return;
+
+            if (checkedId == R.id.btnModoMensal) modoRelatorio = "mensal";
+            else if (checkedId == R.id.btnModoAnual) modoRelatorio = "anual";
+            else if (checkedId == R.id.btnModoPersonalizado) modoRelatorio = "personalizado";
+
+            calendarioBase = Calendar.getInstance();
+            dataInicioPersonalizada = null;
+            dataFimPersonalizada = null;
+            btnDataInicio.setText("Início");
+            btnDataFim.setText("Fim");
+
+            atualizarVisibilidadeControles();
+            atualizarRelatorio();
         });
+
+        btnDataInicio.setOnClickListener(v -> abrirDatePicker(true));
+        btnDataFim.setOnClickListener(v -> abrirDatePicker(false));
+    }
+
+    private void atualizarVisibilidadeControles() {
+        layoutNavegacao.setVisibility("personalizado".equals(modoRelatorio) ? View.GONE : View.VISIBLE);
+        layoutDatasPersonalizadas.setVisibility("personalizado".equals(modoRelatorio) ? View.VISIBLE : View.GONE);
+        chipGroupSemanas.setVisibility("mensal".equals(modoRelatorio) ? View.VISIBLE : View.GONE);
     }
 
     private void navegarPeriodo(int direcao) {
-        switch (tipoRelatorio) {
-            case "semanal":
-                calendario.add(Calendar.WEEK_OF_YEAR, direcao);
-                break;
-            case "mensal":
-                calendario.add(Calendar.MONTH, direcao);
-                break;
-            case "anual":
-                calendario.add(Calendar.YEAR, direcao);
-                break;
-        }
+        if ("mensal".equals(modoRelatorio)) calendarioBase.add(Calendar.MONTH, direcao);
+        else if ("anual".equals(modoRelatorio)) calendarioBase.add(Calendar.YEAR, direcao);
         atualizarRelatorio();
     }
 
-    private void atualizarRelatorio() {
-        Calendar inicio = (Calendar) calendario.clone();
-        Calendar fim = (Calendar) calendario.clone();
-        int diasNoPeriodo;
-        String formatoTitulo;
-
-        switch (tipoRelatorio) {
-            case "semanal":
-                inicio.set(Calendar.DAY_OF_WEEK, inicio.getFirstDayOfWeek());
-                fim.set(Calendar.DAY_OF_WEEK, fim.getFirstDayOfWeek());
-                fim.add(Calendar.DAY_OF_WEEK, 6);
-                formatoTitulo = "'Semana de' dd/MM/yyyy";
-                diasNoPeriodo = 7;
-                break;
-            case "anual":
-                inicio.set(Calendar.DAY_OF_YEAR, 1);
-                fim.set(Calendar.DAY_OF_YEAR, fim.getActualMaximum(Calendar.DAY_OF_YEAR));
-                formatoTitulo = "yyyy";
-                diasNoPeriodo = fim.getActualMaximum(Calendar.DAY_OF_YEAR);
-                break;
-            case "mensal":
-            default:
-                inicio.set(Calendar.DAY_OF_MONTH, 1);
-                fim.set(Calendar.DAY_OF_MONTH, fim.getActualMaximum(Calendar.DAY_OF_MONTH));
-                formatoTitulo = "MMMM 'de' yyyy";
-                diasNoPeriodo = fim.getActualMaximum(Calendar.DAY_OF_MONTH);
-                break;
+    private void abrirDatePicker(boolean isDataInicio) {
+        Calendar calendarioParaPicker = Calendar.getInstance();
+        if (isDataInicio && dataInicioPersonalizada != null) {
+            calendarioParaPicker = dataInicioPersonalizada;
+        } else if (!isDataInicio && dataFimPersonalizada != null) {
+            calendarioParaPicker = dataFimPersonalizada;
         }
 
-        // Atualiza o texto do período na tela
-        SimpleDateFormat sdfTitulo = new SimpleDateFormat(formatoTitulo, new Locale("pt", "BR"));
-        tvPeriodoAtual.setText(sdfTitulo.format(calendario.getTime()));
+        DatePickerDialog dialog = new DatePickerDialog(this, (view, year, month, dayOfMonth) -> {
+            Calendar dataSelecionada = Calendar.getInstance();
+            dataSelecionada.set(year, month, dayOfMonth);
+            if (isDataInicio) {
+                dataInicioPersonalizada = dataSelecionada;
+                btnDataInicio.setText(formatoUI.format(dataSelecionada.getTime()));
+            } else {
+                dataFimPersonalizada = dataSelecionada;
+                btnDataFim.setText(formatoUI.format(dataSelecionada.getTime()));
+            }
+            if (dataInicioPersonalizada != null && dataFimPersonalizada != null) {
+                atualizarRelatorio();
+            }
+        }, calendarioParaPicker.get(Calendar.YEAR), calendarioParaPicker.get(Calendar.MONTH), calendarioParaPicker.get(Calendar.DAY_OF_MONTH));
+        dialog.show();
+    }
 
-        Date dataInicioDate = inicio.getTime();
-        Date dataFimDate = fim.getTime();
+    private void atualizarRelatorio() {
+        if ("personalizado".equals(modoRelatorio)) {
+            if (dataInicioPersonalizada == null || dataFimPersonalizada == null) {
+                preencherDadosRelatorio(0, 0, new HashMap<>());
+                tvPeriodoAtual.setText("Selecione um período");
+                return;
+            }
+            tvPeriodoAtual.setText(formatoUI.format(dataInicioPersonalizada.getTime()) + " - " + formatoUI.format(dataFimPersonalizada.getTime()));
+            gerarRelatorioParaPeriodo(dataInicioPersonalizada.getTime(), dataFimPersonalizada.getTime());
+        } else {
+            Calendar inicio = (Calendar) calendarioBase.clone();
+            Calendar fim = (Calendar) calendarioBase.clone();
+            if ("mensal".equals(modoRelatorio)) {
+                inicio.set(Calendar.DAY_OF_MONTH, 1);
+                fim.set(Calendar.DAY_OF_MONTH, fim.getActualMaximum(Calendar.DAY_OF_MONTH));
+                tvPeriodoAtual.setText(new SimpleDateFormat("MMMM 'de' yyyy", new Locale("pt","BR")).format(calendarioBase.getTime()));
+                gerarChipsDeSemana(calendarioBase);
+                gerarRelatorioParaPeriodo(inicio.getTime(), fim.getTime());
+            } else { // Anual
+                inicio.set(Calendar.DAY_OF_YEAR, 1);
+                fim.set(Calendar.DAY_OF_YEAR, fim.getActualMaximum(Calendar.DAY_OF_YEAR));
+                tvPeriodoAtual.setText(new SimpleDateFormat("yyyy", Locale.getDefault()).format(calendarioBase.getTime()));
+                gerarRelatorioParaPeriodo(inicio.getTime(), fim.getTime());
+            }
+        }
+    }
 
-        String dataInicioFormatada = formatarDataParaDB(dataInicioDate);
-        String dataFimFormatada = formatarDataParaDB(dataFimDate);
+    private void gerarChipsDeSemana(Calendar mes) {
+        chipGroupSemanas.clearCheck();
+        chipGroupSemanas.removeAllViews();
+        int semanasNoMes = mes.getActualMaximum(Calendar.WEEK_OF_MONTH);
+
+        for (int i = 1; i <= semanasNoMes; i++) {
+            Chip chip = new Chip(this);
+            chip.setText("Semana " + i);
+            chip.setCheckable(true);
+            final int semanaAtual = i;
+            chip.setOnClickListener(v -> {
+                Calendar inicioSemana = (Calendar) mes.clone();
+                inicioSemana.set(Calendar.WEEK_OF_MONTH, semanaAtual);
+                inicioSemana.set(Calendar.DAY_OF_WEEK, inicioSemana.getFirstDayOfWeek());
+
+                Calendar fimSemana = (Calendar) inicioSemana.clone();
+                fimSemana.add(Calendar.DAY_OF_WEEK, 6);
+
+                gerarRelatorioParaPeriodo(inicioSemana.getTime(), fimSemana.getTime());
+            });
+            chipGroupSemanas.addView(chip);
+        }
+    }
+
+    private void gerarRelatorioParaPeriodo(Date dataInicio, Date dataFim) {
+        long diffEmMillis = Math.abs(dataFim.getTime() - dataInicio.getTime());
+        long diffEmDias = TimeUnit.DAYS.convert(diffEmMillis, TimeUnit.MILLISECONDS) + 1;
+
+        String dataInicioDB = formatoDB.format(dataInicio);
+        String dataFimDB = formatoDB.format(dataFim);
 
         new Thread(() -> {
-            List<DespesaComCategoria> despesas = despesaDao.listarPorPeriodoComCategoria(dataInicioFormatada, dataFimFormatada);
-            double totalCalculado = despesas.stream().mapToDouble(d -> d.despesa.getValor()).sum();
-            double mediaDiaria = (diasNoPeriodo > 0) ? totalCalculado / diasNoPeriodo : 0;
+            List<DespesaComCategoria> despesas = db.despesaDao().listarPorPeriodoComCategoria(dataInicioDB, dataFimDB);
+            double total = despesas.stream().mapToDouble(d -> d.despesa.getValor()).sum();
+            double media = (diffEmDias > 0) ? total / diffEmDias : 0;
 
             Map<String, Double> gastosPorCategoria = new HashMap<>();
-            for(DespesaComCategoria d : despesas) {
+            for (DespesaComCategoria d : despesas) {
                 gastosPorCategoria.put(d.nomeCategoria, gastosPorCategoria.getOrDefault(d.nomeCategoria, 0.0) + d.despesa.getValor());
             }
 
-            runOnUiThread(() -> preencherDadosRelatorio(totalCalculado, mediaDiaria, gastosPorCategoria));
+            runOnUiThread(() -> preencherDadosRelatorio(total, media, gastosPorCategoria));
         }).start();
     }
 
@@ -171,7 +218,9 @@ public class Relatorio extends AppCompatActivity {
             tvSemGastos.setText("Nenhum gasto registrado neste período.");
             llCategorias.addView(tvSemGastos);
         } else {
-            gastosPorCategoria.forEach((categoria, valor) -> adicionarLinhaCategoria(categoria, valor, df));
+            gastosPorCategoria.entrySet().stream()
+                    .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+                    .forEach(entry -> adicionarLinhaCategoria(entry.getKey(), entry.getValue(), df));
         }
     }
 
@@ -194,9 +243,5 @@ public class Relatorio extends AppCompatActivity {
         linhaLayout.addView(tvValorCategoria);
 
         llCategorias.addView(linhaLayout);
-    }
-
-    private String formatarDataParaDB(Date data) {
-        return new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(data);
     }
 }

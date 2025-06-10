@@ -9,7 +9,7 @@ import java.util.List;
 public interface CategoriaDao {
 
     @Insert
-    long inserir(Categoria categoria); // Retorna o ID da categoria inserida
+    long inserir(Categoria categoria);
 
     @Query("SELECT * FROM categorias ORDER BY nome ASC")
     List<Categoria> listarTodas();

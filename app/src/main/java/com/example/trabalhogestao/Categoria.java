@@ -6,7 +6,7 @@ import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "categorias",
-        indices = {@Index(value = "nome", unique = true)}) // Garante que não haja categorias com nomes repetidos
+        indices = {@Index(value = "nome", unique = true)})
 public class Categoria {
 
     @PrimaryKey(autoGenerate = true)
@@ -19,7 +19,6 @@ public class Categoria {
         this.nome = nome;
     }
 
-    // Getters e Setters
     public int getId() {
         return id;
     }
@@ -37,7 +36,6 @@ public class Categoria {
         this.nome = nome;
     }
 
-    // Isso é importante para o Spinner exibir o nome da categoria corretamente
     @Override
     public String toString() {
         return this.nome;

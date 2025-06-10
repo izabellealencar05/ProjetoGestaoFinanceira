@@ -132,7 +132,6 @@ public class CadastroDespesa extends AppCompatActivity {
         builder.show();
     }
 
-    // --- MÉTODO COM A VALIDAÇÃO CORRIGIDA ---
     private void salvarNovaCategoria(String nome) {
         Categoria novaCategoria = new Categoria(nome);
         new Thread(() -> {
@@ -141,7 +140,7 @@ public class CadastroDespesa extends AppCompatActivity {
 
                 runOnUiThread(() -> {
                     Toast.makeText(this, "Categoria salva!", Toast.LENGTH_SHORT).show();
-                    carregarCategorias(); // Recarrega a lista para incluir a nova categoria.
+                    carregarCategorias();
                 });
 
             } catch (Exception e) {

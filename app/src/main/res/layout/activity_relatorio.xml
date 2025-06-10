@@ -7,24 +7,57 @@
     android:padding="16dp"
     tools:context=".Relatorio">
 
-    <!-- Cabeçalho de Navegação de Período -->
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/toggleModoRelatorio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:selectionRequired="true"
+        app:singleSelection="true">
+
+        <Button
+            android:id="@+id/btnModoMensal"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mensal" />
+
+        <Button
+            android:id="@+id/btnModoAnual"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Anual" />
+
+        <Button
+            android:id="@+id/btnModoPersonalizado"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Período" />
+
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
     <LinearLayout
         android:id="@+id/layoutNavegacao"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@id/toggleModoRelatorio">
 
         <ImageButton
             android:id="@+id/btnPeriodoAnterior"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Período Anterior"
-            android:src="@drawable/ic_chevron_left" />
+            android:src="@drawable/ic_chevron_left"
+            android:contentDescription="Período Anterior"/>
 
         <TextView
             android:id="@+id/tvPeriodoAtual"
@@ -41,127 +74,128 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Próximo Período"
-            android:src="@drawable/ic_chevron_right" />
+            android:src="@drawable/ic_chevron_right"
+            android:contentDescription="Próximo Período"/>
     </LinearLayout>
 
-    <!-- Seletor de Modo (Semanal, Mensal, Anual) -->
-    <com.google.android.material.button.MaterialButtonToggleGroup
-        android:id="@+id/toggleModoRelatorio"
-        android:layout_width="wrap_content"
+    <FrameLayout
+        android:id="@+id/layoutControlesEspecificos"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/layoutNavegacao"
-        app:selectionRequired="true"
-        app:singleSelection="true">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <Button
-            android:id="@+id/btnModoSemanal"
-            style="?attr/materialButtonOutlinedStyle"
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupSemanas"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Semanal" />
+            android:layout_gravity="center"
+            android:visibility="gone"
+            app:singleSelection="true">
+        </com.google.android.material.chip.ChipGroup>
 
-        <Button
-            android:id="@+id/btnModoMensal"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:id="@+id/layoutDatasPersonalizadas"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Mensal" />
+            android:orientation="horizontal"
+            android:visibility="gone">
+            <Button
+                android:id="@+id/btnDataInicio"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="Início"/>
+            <Button
+                android:id="@+id/btnDataFim"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Fim"/>
+        </LinearLayout>
 
-        <Button
-            android:id="@+id/btnModoAnual"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Anual" />
-    </com.google.android.material.button.MaterialButtonToggleGroup>
+    </FrameLayout>
 
-    <!-- Conteúdo do Relatório -->
-    <LinearLayout
-        android:id="@+id/layoutConteudoRelatorio"
+    <ScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@id/btnVoltarRelatorio"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layoutControlesEspecificos"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toggleModoRelatorio">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/btnVoltarRelatorio">
 
-        <!-- O restante da UI do relatório (Total, Média, Categorias) continua aqui dentro -->
-        <!-- O ideal é usar um ScrollView para o conteúdo -->
-        <ScrollView
+        <!-- CONTEÚDO CORRIGIDO E COMPLETO ABAIXO -->
+        <LinearLayout
+            android:id="@+id/layoutConteudoRelatorio"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvLabelTotalGasto"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Total Gasto no Período:"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvTotalGasto"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/holo_red_dark"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                tools:text="R$ 0,00" />
+
+            <TextView
+                android:id="@+id/tvLabelMediaDiaria"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Média de Gasto Diário:"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvMediaDiaria"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                tools:text="R$ 0,00" />
+
+            <View
+                android:id="@+id/divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="24dp"
+                android:background="?android:attr/listDivider" />
+
+            <TextView
+                android:id="@+id/tvLabelGastosCategoria"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Gastos por Categoria"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
             <LinearLayout
+                android:id="@+id/llCategorias"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:layout_marginTop="8dp"
+                android:orientation="vertical" />
 
-                <TextView
-                    android:id="@+id/tvLabelTotalGasto"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Total Gasto no Período:"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvTotalGasto"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@android:color/holo_red_dark"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    tools:text="R$ 0,00" />
-
-                <TextView
-                    android:id="@+id/tvLabelMediaDiaria"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="Média de Gasto Diário:"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvMediaDiaria"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    tools:text="R$ 0,00" />
-
-                <View
-                    android:id="@+id/divider"
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="24dp"
-                    android:background="?android:attr/listDivider" />
-
-                <TextView
-                    android:id="@+id/tvLabelGastosCategoria"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:text="Gastos por Categoria"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
-
-                <LinearLayout
-                    android:id="@+id/llCategorias"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:orientation="vertical" />
-
-            </LinearLayout>
-        </ScrollView>
-
-    </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
 
     <Button
         android:id="@+id/btnVoltarRelatorio"
@@ -169,7 +203,7 @@
         android:layout_height="wrap_content"
         android:text="Voltar"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
