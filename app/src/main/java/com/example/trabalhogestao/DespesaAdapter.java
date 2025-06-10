@@ -59,7 +59,7 @@ public class DespesaAdapter extends RecyclerView.Adapter<DespesaAdapter.DespesaV
             holder.tvData.setText(dataParaExibir);
         } catch (ParseException e) {
             Log.e("DespesaAdapter", "Erro ao formatar data: " + dataDoBanco, e);
-            holder.tvData.setText(dataDoBanco); // Em caso de erro, mostra a data original
+            holder.tvData.setText(dataDoBanco);
         }
 
         holder.btnEditar.setOnClickListener(v -> listener.onEditClick(despesa));

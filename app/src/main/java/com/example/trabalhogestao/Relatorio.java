@@ -1,5 +1,12 @@
 package com.example.trabalhogestao;
 
+import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.data.PieData;
+import com.github.mikephil.charting.data.PieDataSet;
+import com.github.mikephil.charting.data.PieEntry;
+import com.github.mikephil.charting.formatter.PercentFormatter;
+import com.github.mikephil.charting.utils.ColorTemplate;
+import android.graphics.Color;
 import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -10,34 +17,36 @@ import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.button.MaterialButtonToggleGroup;
 import java.text.DateFormatSymbols;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class Relatorio extends AppCompatActivity {
 
-    private Calendar calendarioBase;
-    private String modoRelatorio = "mensal";
-    private Calendar dataInicioPersonalizada, dataFimPersonalizada;
-
-    private TextView tvPeriodoAtual, tvTotalGasto, tvMediaDiaria;
+    private PieChart pieChart;
+    private TextView tvPeriodoAtual, tvTotalGasto, tvMediaDiaria, tvLabelMediaDiaria;
     private LinearLayout llCategorias, layoutNavegacao, layoutDatasPersonalizadas;
     private Button btnDataInicio, btnDataFim;
     private MaterialButtonToggleGroup toggleModoRelatorio;
     private ImageButton btnPeriodoAnterior, btnProximoPeriodo;
 
+    private Calendar calendarioBase;
+    private String modoRelatorio = "mensal";
+    private Calendar dataInicioPersonalizada, dataFimPersonalizada;
     private AppDatabase db;
     private final SimpleDateFormat formatoDB = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
     private final SimpleDateFormat formatoUI = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
@@ -57,6 +66,7 @@ public class Relatorio extends AppCompatActivity {
     }
 
     private void vincularViews() {
+        pieChart = findViewById(R.id.pieChart);
         tvPeriodoAtual = findViewById(R.id.tvPeriodoAtual);
         tvTotalGasto = findViewById(R.id.tvTotalGasto);
         tvMediaDiaria = findViewById(R.id.tvMediaDiaria);
@@ -68,6 +78,7 @@ public class Relatorio extends AppCompatActivity {
         toggleModoRelatorio = findViewById(R.id.toggleModoRelatorio);
         btnPeriodoAnterior = findViewById(R.id.btnPeriodoAnterior);
         btnProximoPeriodo = findViewById(R.id.btnProximoPeriodo);
+        tvLabelMediaDiaria = findViewById(R.id.tvLabelMediaDiaria);
         findViewById(R.id.btnVoltarRelatorio).setOnClickListener(v -> finish());
     }
 
@@ -93,7 +104,6 @@ public class Relatorio extends AppCompatActivity {
         });
 
         tvPeriodoAtual.setOnClickListener(v -> abrirSeletorDePeriodo());
-
         btnDataInicio.setOnClickListener(v -> abrirDatePicker(true));
         btnDataFim.setOnClickListener(v -> abrirDatePicker(false));
     }
@@ -113,7 +123,7 @@ public class Relatorio extends AppCompatActivity {
 
         NumberPicker monthPicker = new NumberPicker(this);
         final String[] meses = new DateFormatSymbols(new Locale("pt", "BR")).getMonths();
-        String[] displayMeses = Arrays.copyOf(meses, 12); // Garante que temos apenas 12 meses
+        String[] displayMeses = Arrays.copyOf(meses, 12);
         monthPicker.setMinValue(0);
         monthPicker.setMaxValue(11);
         monthPicker.setDisplayedValues(displayMeses);
@@ -121,8 +131,8 @@ public class Relatorio extends AppCompatActivity {
 
         NumberPicker yearPicker = new NumberPicker(this);
         int anoAtual = Calendar.getInstance().get(Calendar.YEAR);
-        yearPicker.setMinValue(anoAtual - 20);
-        yearPicker.setMaxValue(anoAtual + 20);
+        yearPicker.setMinValue(anoAtual - 50);
+        yearPicker.setMaxValue(anoAtual + 50);
         yearPicker.setValue(calendarioBase.get(Calendar.YEAR));
 
         container.addView(monthPicker);
@@ -143,8 +153,8 @@ public class Relatorio extends AppCompatActivity {
     private void abrirSeletorDeAno() {
         NumberPicker yearPicker = new NumberPicker(this);
         int anoAtual = Calendar.getInstance().get(Calendar.YEAR);
-        yearPicker.setMinValue(anoAtual - 20);
-        yearPicker.setMaxValue(anoAtual + 20);
+        yearPicker.setMinValue(anoAtual - 50);
+        yearPicker.setMaxValue(anoAtual + 50);
         yearPicker.setValue(calendarioBase.get(Calendar.YEAR));
 
         new AlertDialog.Builder(this)
@@ -157,7 +167,6 @@ public class Relatorio extends AppCompatActivity {
                 .setNegativeButton("Cancelar", null)
                 .show();
     }
-
 
     private void atualizarVisibilidadeControles() {
         layoutNavegacao.setVisibility("personalizado".equals(modoRelatorio) ? View.GONE : View.VISIBLE);
@@ -202,7 +211,7 @@ public class Relatorio extends AppCompatActivity {
     private void atualizarRelatorio() {
         if ("personalizado".equals(modoRelatorio)) {
             if (dataInicioPersonalizada == null || dataFimPersonalizada == null) {
-                preencherDadosRelatorio(0, 0, new HashMap<>());
+                preencherDadosRelatorio(0, 0, new HashMap<>(), 0);
                 tvPeriodoAtual.setText("Selecione um período");
                 return;
             }
@@ -215,24 +224,22 @@ public class Relatorio extends AppCompatActivity {
                 inicio.set(Calendar.DAY_OF_MONTH, 1);
                 fim.set(Calendar.DAY_OF_MONTH, fim.getActualMaximum(Calendar.DAY_OF_MONTH));
                 tvPeriodoAtual.setText(new SimpleDateFormat("MMMM 'de' yyyy", new Locale("pt","BR")).format(calendarioBase.getTime()));
+                gerarRelatorioParaPeriodo(inicio.getTime(), fim.getTime());
             } else {
                 inicio.set(Calendar.DAY_OF_YEAR, 1);
                 fim.set(Calendar.DAY_OF_YEAR, fim.getActualMaximum(Calendar.DAY_OF_YEAR));
                 tvPeriodoAtual.setText(new SimpleDateFormat("yyyy", Locale.getDefault()).format(calendarioBase.getTime()));
+                gerarRelatorioParaPeriodo(inicio.getTime(), fim.getTime());
             }
-            gerarRelatorioParaPeriodo(inicio.getTime(), fim.getTime());
         }
     }
 
     private void gerarRelatorioParaPeriodo(Date dataInicio, Date dataFim) {
         if (dataInicio.after(dataFim)) {
-            preencherDadosRelatorio(0,0,new HashMap<>());
+            preencherDadosRelatorio(0,0,new HashMap<>(), 0);
             Toast.makeText(this, "A data de início não pode ser posterior à data de fim.", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        long diffEmMillis = Math.abs(dataFim.getTime() - dataInicio.getTime());
-        long diffEmDias = TimeUnit.DAYS.convert(diffEmMillis, TimeUnit.MILLISECONDS) + 1;
 
         String dataInicioDB = formatoDB.format(dataInicio);
         String dataFimDB = formatoDB.format(dataFim);
@@ -240,21 +247,35 @@ public class Relatorio extends AppCompatActivity {
         new Thread(() -> {
             List<DespesaComCategoria> despesas = db.despesaDao().listarPorPeriodoComCategoria(dataInicioDB, dataFimDB);
             double total = despesas.stream().mapToDouble(d -> d.despesa.getValor()).sum();
-            double media = (diffEmDias > 0) ? total / diffEmDias : 0;
+
+            Set<String> diasComGasto = new HashSet<>();
+            for (DespesaComCategoria d : despesas) {
+                diasComGasto.add(d.despesa.getData());
+            }
+            int numeroDeDiasComGasto = diasComGasto.size();
+            double media = (numeroDeDiasComGasto > 0) ? total / numeroDeDiasComGasto : 0;
 
             Map<String, Double> gastosPorCategoria = new HashMap<>();
             for (DespesaComCategoria d : despesas) {
                 gastosPorCategoria.put(d.nomeCategoria, gastosPorCategoria.getOrDefault(d.nomeCategoria, 0.0) + d.despesa.getValor());
             }
 
-            runOnUiThread(() -> preencherDadosRelatorio(total, media, gastosPorCategoria));
+            runOnUiThread(() -> preencherDadosRelatorio(total, media, gastosPorCategoria, numeroDeDiasComGasto));
         }).start();
     }
 
-    private void preencherDadosRelatorio(double total, double media, Map<String, Double> gastosPorCategoria) {
+    private void preencherDadosRelatorio(double total, double media, Map<String, Double> gastosPorCategoria, int diasComGasto) {
         DecimalFormat df = new DecimalFormat("0.00");
         tvTotalGasto.setText("R$ " + df.format(total));
+
+        if (diasComGasto > 0) {
+            tvLabelMediaDiaria.setText("Média por Dia de Gasto (" + diasComGasto + " dias):");
+        } else {
+            tvLabelMediaDiaria.setText("Média por Dia de Gasto:");
+        }
         tvMediaDiaria.setText("R$ " + df.format(media));
+
+        configurarGraficoPizza(gastosPorCategoria);
 
         llCategorias.removeAllViews();
         if (gastosPorCategoria.isEmpty()) {
@@ -266,6 +287,40 @@ public class Relatorio extends AppCompatActivity {
                     .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
                     .forEach(entry -> adicionarLinhaCategoria(entry.getKey(), entry.getValue(), df));
         }
+    }
+
+    private void configurarGraficoPizza(Map<String, Double> gastosPorCategoria) {
+        if (gastosPorCategoria.isEmpty() || gastosPorCategoria.values().stream().allMatch(v -> v == 0)) {
+            pieChart.setVisibility(View.GONE);
+            return;
+        }
+
+        pieChart.setVisibility(View.VISIBLE);
+
+        List<PieEntry> entradas = new ArrayList<>();
+        for (Map.Entry<String, Double> entry : gastosPorCategoria.entrySet()) {
+            entradas.add(new PieEntry(entry.getValue().floatValue(), entry.getKey()));
+        }
+
+        PieDataSet dataSet = new PieDataSet(entradas, "");
+        dataSet.setColors(ColorTemplate.MATERIAL_COLORS);
+        dataSet.setValueTextColor(Color.BLACK);
+        dataSet.setValueTextSize(12f);
+        dataSet.setSliceSpace(2f);
+
+        PieData pieData = new PieData(dataSet);
+        pieData.setValueFormatter(new PercentFormatter(pieChart));
+
+        pieChart.setData(pieData);
+        pieChart.setUsePercentValues(true);
+        pieChart.getDescription().setEnabled(false);
+        pieChart.setExtraOffsets(5, 10, 5, 5);
+        pieChart.setDrawHoleEnabled(true);
+        pieChart.setHoleColor(Color.TRANSPARENT);
+        pieChart.setEntryLabelColor(Color.BLACK);
+        pieChart.getLegend().setEnabled(false);
+        pieChart.animateY(1000);
+        pieChart.invalidate();
     }
 
     private void adicionarLinhaCategoria(String categoria, double valor, DecimalFormat df) {

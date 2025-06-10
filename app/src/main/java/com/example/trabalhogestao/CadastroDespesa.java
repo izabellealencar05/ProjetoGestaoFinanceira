@@ -145,7 +145,7 @@ public class CadastroDespesa extends AppCompatActivity {
 
             } catch (Exception e) {
                 runOnUiThread(() -> {
-                    Toast.makeText(this, "Erro: Categoria já existe.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Categoria já existe!", Toast.LENGTH_LONG).show();
                 });
             }
         }).start();

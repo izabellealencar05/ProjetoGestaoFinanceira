@@ -78,7 +78,6 @@ public class Home extends AppCompatActivity implements DespesaAdapter.OnItemClic
             cadastroDespesaLauncher.launch(intent);
         });
 
-        // Logout
         logout.setOnClickListener(v -> {
             firebaseAuth.signOut();
             Toast.makeText(getApplicationContext(), "Logout realizado com sucesso!", Toast.LENGTH_SHORT).show();
