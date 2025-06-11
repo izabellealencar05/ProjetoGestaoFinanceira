@@ -10,8 +10,7 @@ import android.widget.Spinner;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.google.android.material.appbar.MaterialToolbar; // Importa a MaterialToolbar
+import com.google.android.material.appbar.MaterialToolbar;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -25,8 +24,7 @@ public class CadastroDespesa extends AppCompatActivity {
     private Spinner spinnerCategoria;
     private ImageButton btnNovaCategoria;
     private Button btnSalvar;
-    private MaterialToolbar toolbar; // A variável para o cabeçalho
-
+    private MaterialToolbar toolbar;
     private Despesa despesaParaEditar;
     private AppDatabase db;
     private List<Categoria> listaCategorias = new ArrayList<>();
@@ -47,7 +45,6 @@ public class CadastroDespesa extends AppCompatActivity {
     }
 
     private void vincularViews() {
-        // Vincula o componente correto do cabeçalho
         toolbar = findViewById(R.id.toolbarCadastro);
         etDescricao = findViewById(R.id.etDescricao);
         etValor = findViewById(R.id.etValor);
@@ -58,7 +55,6 @@ public class CadastroDespesa extends AppCompatActivity {
     }
 
     private void configurarListeners() {
-        // Configura o clique no ícone de navegação da toolbar
         toolbar.setNavigationOnClickListener(v -> finish());
         btnNovaCategoria.setOnClickListener(v -> abrirDialogNovaCategoria());
         btnSalvar.setOnClickListener(v -> salvarDespesa());
@@ -84,7 +80,7 @@ public class CadastroDespesa extends AppCompatActivity {
 
     private void verificarModoEdicao() {
         if (getIntent().hasExtra("DESPESA_ID")) {
-            toolbar.setTitle("Editar Despesa"); // Usa a toolbar para definir o título
+            toolbar.setTitle("Editar Despesa");
             int despesaId = getIntent().getIntExtra("DESPESA_ID", -1);
             if (despesaId != -1) {
                 carregarDespesaParaEdicao(despesaId);

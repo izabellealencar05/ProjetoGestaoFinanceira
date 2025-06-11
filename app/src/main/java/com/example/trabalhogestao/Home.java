@@ -6,32 +6,27 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 public class Home extends AppCompatActivity implements DespesaAdapter.OnItemClickListener {
 
-    // Componentes da UI atualizados para corresponder ao novo layout
     private ImageView foto;
     private TextView tvBemVindo;
     private ImageButton buttonLogout, btnGerarRelatorio;
     private FloatingActionButton btnCadastrarDespesa;
     private RecyclerView rvDespesas;
-
     private FirebaseAuth firebaseAuth;
     private AppDatabase db;
     private DespesaDao despesaDao;
@@ -51,7 +46,6 @@ public class Home extends AppCompatActivity implements DespesaAdapter.OnItemClic
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-        // Views
         foto = findViewById(R.id.imageViewFoto);
         tvBemVindo = findViewById(R.id.textViewNome);
         buttonLogout = findViewById(R.id.buttonLogout);
@@ -59,7 +53,6 @@ public class Home extends AppCompatActivity implements DespesaAdapter.OnItemClic
         btnCadastrarDespesa = findViewById(R.id.btnCadastrarDespesa);
         rvDespesas = findViewById(R.id.rvDespesas);
 
-        // Firebase
         firebaseAuth = FirebaseAuth.getInstance();
         FirebaseUser user = firebaseAuth.getCurrentUser();
 
@@ -72,14 +65,11 @@ public class Home extends AppCompatActivity implements DespesaAdapter.OnItemClic
             }
         }
 
-        // DB
         db = AppDatabase.getInstancia(this);
         despesaDao = db.despesaDao();
 
-        // RecyclerView
         carregarDespesas();
 
-        // Configuração dos Listeners para os novos componentes
         btnCadastrarDespesa.setOnClickListener(view -> {
             Intent intent = new Intent(Home.this, CadastroDespesa.class);
             cadastroDespesaLauncher.launch(intent);

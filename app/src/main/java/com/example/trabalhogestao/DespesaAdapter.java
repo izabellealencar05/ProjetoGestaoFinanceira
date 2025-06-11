@@ -71,14 +71,6 @@ public class DespesaAdapter extends RecyclerView.Adapter<DespesaAdapter.DespesaV
         return listaDespesas.size();
     }
 
-
-    public void setDespesas(List<DespesaComCategoria> novasDespesas) {
-        this.listaDespesas = novasDespesas;
-        notifyDataSetChanged();
-    }
-
-
-
     public static class DespesaViewHolder extends RecyclerView.ViewHolder {
         TextView tvDescricao, tvValor, tvData, tvCategoria;
         ImageButton btnEditar, btnExcluir;

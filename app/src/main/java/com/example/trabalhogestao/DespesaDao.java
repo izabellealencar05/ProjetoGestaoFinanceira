@@ -17,10 +17,6 @@ public interface DespesaDao {
 
     @Delete
     void deletar(Despesa despesa);
-
-    @Query("DELETE FROM despesas")
-    void deletarTodas();
-
     @Update
     void atualizar(Despesa despesa);
     @Query("SELECT * FROM despesas WHERE id = :despesaId LIMIT 1")
