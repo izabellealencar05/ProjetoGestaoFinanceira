@@ -66,14 +66,6 @@ O **MiniApp Financeiro** é um aplicativo voltado para o controle financeiro pes
 
 ## 📝 Considerações Finais
 
-O **MiniApp Financeiro** foi desenvolvido com o objetivo de ser simples, funcional e eficaz para o controle de gastos diários. A autenticação via API do Google traz praticidade e segurança. O app atende a todos os critérios definidos no Plano de Ensino da disciplina.
+O **MiniApp Financeiro** foi desenvolvido com o objetivo de ser simples, funcional e eficaz para o controle de gastos diários. A autenticação via API do Google traz praticidade e segurança. 
 
----
 
-## 🎥 Apresentação
-
-- A apresentação será feita em aula, utilizando **emulador Android**.
-- O foco será demonstrar o funcionamento do app e a experiência do usuário.
-- O código-fonte **não será apresentado**, apenas o aplicativo em execução.
-
----
