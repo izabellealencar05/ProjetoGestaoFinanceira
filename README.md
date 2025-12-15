@@ -2,21 +2,6 @@
 
 Um aplicativo móvel simples e eficiente para gerenciamento de despesas diárias, com geração automática de relatórios semanais e login via Conta Google. Desenvolvido para a plataforma Android com foco em usabilidade, organização e boas práticas de desenvolvimento.
 
----
-
-## 📚 Informações Gerais
-
-- **Nome do Projeto:** MiniApp Financeiro  
-- **Grupo:**  
-  • Felipe Madruga Gusmão  
-  • Giovana Amorim Campos  
-  • Izabelle Alencar Nabarrete  
-  • Yago de Queiroz Pio  
-- **Disciplina:** Programação para Dispositivos Móveis  
-- **Professor:** Kristian Pablo Dias Pacheco  
-- **Semestre:** 2025.1  
-
----
 
 ## 🧠 Descrição Geral
 
